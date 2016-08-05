@@ -1,7 +1,5 @@
 /*
 The MIT License (MIT)
-Copyright (c) 2016 British Broadcasting Corporation.
-This software is provided by Lancaster University by arrangement with the BBC.
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation
@@ -23,16 +21,10 @@ DEALINGS IN THE SOFTWARE.
 
 MicroBit uBit;
 
-//
-// Print details of all events received to the serial port.
-// Default settings are 115200 baud, 8N1 over the USB interface.
-//
-
-
 
 uint8_t mode;
 uint8_t last_mode;
-//all the available images
+//Image Definitions
 static const uint8_t img0[] __attribute__ ((aligned (4))) = {0xff, 0xff, 5, 0, 5, 0, 
      0,1,0,1,0,
      1,1,1,1,1, 

@@ -1,9 +1,6 @@
 /*
  The MIT License (MIT)
  
- Copyright (c) 2016 British Broadcasting Corporation.
- This software is provided by Lancaster University by arrangement with the BBC.
- 
  Permission is hereby granted, free of charge, to any person obtaining a
  copy of this software and associated documentation files (the "Software"),
  to deal in the Software without restriction, including without limitation
@@ -33,7 +30,8 @@ MicroBit uBit;
 //
 
 #define ARR_LEN 25
-#define THRESHOLD 100
+#define THRESHOLD 700
+#define HIGH 200
 
 uint8_t kostas;
 uint8_t last_mode;
@@ -44,7 +42,7 @@ MicroBitPin P0(MICROBIT_ID_IO_P0, MICROBIT_PIN_P0, PIN_CAPABILITY_ANALOG);
 
 MicroBitImage img(5,5);
 
-
+//Rx event - triggered by '1' from from the Tx micrbit
 void receive_image()
 {
 	uint16_t count;
@@ -53,19 +51,23 @@ void receive_image()
 	
     for( int i = 0 ; i < ARR_LEN ; i++ )
     {
-		x = i%5;//change directions in the matrix every 1 step change x
-		y = i/5;//every 5 
+        //x and y track coordinates to draw LEDs
+		x = i%5;
+		y = i/5;
+
+        //This loop reduces noise by sampling each '1' 5 times
 		for(int i=0;i<5;i++)
 		{
-			kostas=P0.getAnalogValue();//read for analog values
-			count += kostas;//sum the values for 5 iterations
-			uBit.sleep(50);//wait 50ms
-		}//50 * 5 = 250ms delay
-		if(count<700)//if the sum is lower than the threshold
+			kostas=P0.getAnalogValue();
+			count += kostas;
+			uBit.sleep(50);
+            //50 * 5 = 250ms delay - critical to time with Tx
+		}
+		if(count<THRESHOLD)
 			uBit.display.image.setPixelValue(x, y, 255);//set the bit to 1
 		else
 			uBit.display.image.setPixelValue(x, y, 0);//else set the bit to 0
-		count = 0;//reset count
+		count = 0;
 		uBit.sleep(500);//250 + 500 = 750ms delay per bit
     }
 }
@@ -78,20 +80,29 @@ int main()
     uBit.init();
 	uint16_t count=0;
 
-    while(1){
-		kostas=P0.getAnalogValue();//read for analog values
-		if(kostas<200)//if the value is low
+    while(1)
+    {
+
+		kostas = P0.getAnalogValue();
+        //if the value is high enter checking loop
+		if( kostas < HIGH )
 		{
-		for(int i=0;i<5;i++)//check if it is a 1
-		{
-			count += kostas;
-			uBit.sleep(50);
-			kostas=P0.getAnalogValue();
-		}
-		if(count<700)//if it is a 1
-			receive_image();//receive the image
+
+            //sample 5 times to reduce noise
+            ////TODO - remove duplicate code (bad)
+		    for( int i = 0 ; i < 5 ; i++ )
+		    {
+		    	count += kostas;
+		    	uBit.sleep(50);
+		    	kostas=P0.getAnalogValue();
+		    }
+        
+            //give a '1'
+		    if( count < THRESHOLD )
+		    	receive_image();
 		
 		count = 0;//reset count
+
 		}
 	}
 }
